@@ -6,8 +6,8 @@ An object that handles data input
 """
 class mnistData(object):
     raw_image_shape = (28, 28, 1)
-    inputShape = (784,)
-    numClasses = 10
+    num_features = 784
+    num_classes = 10
 
     #TODO set random seed
     def __init__(self, path, flatten=True):
