@@ -1,8 +1,8 @@
 import tensorflow as tf
 
-def weight_variable(shape, std=0.01):
+def weight_variable(shape, name, std=0.01):
     initial = tf.truncated_normal(shape, stddev=std)
-    return tf.Variable(initial)
+    return tf.Variable(initial, name=name)
 
 #[-1, 1] -> [0, 255]
 def normImage(img, normalize):

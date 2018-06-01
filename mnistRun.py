@@ -25,19 +25,21 @@ class TBDictParams(object):
     load               = False
     load_file          = ""
     #Device to run on
-    device             = "/gpu:0"
+    device             = "/gpu:1"
     #data params
     num_classes        = dataObj.num_classes
     num_features       = dataObj.num_features
-    eval_batch_size    = 2048
 
     #Model params
     num_steps = 40000 #T in paper
     dict_size = 300
     batch_size = 256
-    l1_weight = 0.15 #lambda_1 in paper
+    l1_weight = 0.075 #lambda_1 in paper
     l2_weight = 0    #lambda_2 in paper
     weight_decay = 1e-3 #v in paper
+
+    #LCA params
+    sc_lr = 3e-3
 
     decay_time = num_steps/10 #Time period which learning rate starts annealing
     lr = 1e-3 #Learning rate

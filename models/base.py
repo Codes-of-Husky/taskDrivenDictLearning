@@ -261,17 +261,14 @@ class base(object):
         (numExamples, _) = allImages.shape
         assert(numExamples == allLabels.shape[0])
 
-        #TODO remove this
-        #assert(numExamples % self.params.eval_batch_size == 0)
-
-        steps_per_epoch = numExamples // self.params.eval_batch_size
+        steps_per_epoch = numExamples // self.params.batch_size
         correct_count = 0.0
         idx = 0
         for i, test_step in enumerate(range(steps_per_epoch)):
-            images = allImages[idx:idx+self.params.eval_batch_size]
-            labels = allLabels[idx:idx+self.params.eval_batch_size]
+            images = allImages[idx:idx+self.params.batch_size]
+            labels = allLabels[idx:idx+self.params.batch_size]
             correct_count += self.evalModel(images, labels)
-            idx += self.params.eval_batch_size
+            idx += self.params.batch_size
         accuracy = float(correct_count) / numExamples
         #Eval with last set of images and labels, with the final accuracy
         self.evalModelSummary(images, labels, accuracy)
