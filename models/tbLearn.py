@@ -146,6 +146,9 @@ class tbLearn(base):
     def evalModel(self, input, labels):
         nbatch = input.shape[0]
         feed_dict = {self.input: input, self.labels:labels}
+        #Run sparse coding
+        self.scObj(self.sess, feed_dict)
+        #Calculate estimated labels
         est_labels = self.sess.run(self.est_labels, feed_dict=feed_dict)
         correct_count = float(np.sum(est_labels == labels))/nbatch
         return correct_count
