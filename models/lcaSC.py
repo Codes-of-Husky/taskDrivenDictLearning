@@ -31,7 +31,7 @@ class lcaSC(object):
         d_potential = [(recon_grad[0][0] + (self.potential - self.activation)/(num_class*batch), self.potential)]
         self.train_step = opt.apply_gradients(d_potential)
 
-    def __call__(self, sess, feed_dict, max_iterations=100, verbose=False):
+    def __call__(self, sess, feed_dict, max_iterations=200, verbose=False):
         sess.run(self.reset_potential)
         sess.run(self.calc_activation)
         for it in range(max_iterations):

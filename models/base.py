@@ -61,7 +61,15 @@ class base(object):
 
     def genParamsStr(self, params):
         param_dict = {i:getattr(params, i) for i in dir(params) if not inspect.ismethod(i) and "__" not in i}
-        paramsStr = json.dumps(param_dict, indent=2)
+        json_dict = {}
+        for k in param_dict:
+            try:
+                json.dumps(param_dict[k])
+                json_dict[k] = param_dict[k]
+            except:
+                json_dict[k] = "not_serializable"
+
+        paramsStr = json.dumps(json_dict, indent=2)
         return paramsStr
 
     def printParamsStr(self, params):
@@ -121,9 +129,9 @@ class base(object):
         print("Cannot call base class buildModel")
         assert(0)
 
-    def addImageSummary(self, name, tensor, normalize=True):
-        assert(len(tensor.get_shape()) == 4)
-        self.imageDict[name] = (tensor, normalize)
+    #def addImageSummary(self, name, tensor, normalize=True):
+    #    assert(len(tensor.get_shape()) == 4)
+    #    self.imageDict[name] = (tensor, normalize)
 
     def buildSummaries(self):
         ##Summaries ops
@@ -166,8 +174,12 @@ class base(object):
             #Create images per item in imageDict
             #trainSummaries.append(tf.summary.image(key+"_grid_train", normImage(tensor, normalize)))
             #testSummaries.append(tf.summary.image(key+"_grid_test", normImage(test_tensor, test_normalize)))
-            bothSummaries.append(tf.summary.image(key, normImage(self.imageDict[key][0], self.imageDict[key][1])))
-            bothSummaries.append(tf.summary.histogram(key, self.imageDict[key][0]))
+            image = self.imageDict[key]
+            max_image = tf.reduce_max(image)
+            min_image = tf.reduce_min(image)
+            norm_image = (image + min_image)/(max_image - min_image)
+            bothSummaries.append(tf.summary.image(key, norm_image))
+            bothSummaries.append(tf.summary.histogram(key, norm_image))
 
         #Output tensorboard summaries
         for key in self.scalarDict.keys():

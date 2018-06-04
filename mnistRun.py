@@ -1,5 +1,6 @@
 from data.mnistData import mnistData
 from models.tbLearn import tbLearn
+import pdb
 
 path = "/home/slundquist/mountData/datasets/mnist"
 dataObj = mnistData(path, flatten=True)
@@ -8,9 +9,9 @@ dataObj = mnistData(path, flatten=True)
 class TBDictParams(object):
     ##Bookkeeping params
     #Base output directory
-    out_dir            = "/home/slundquist/mountData/ram/"
+    out_dir            = "/home/slundquist/mountData/tbLearn/"
     #Inner run directory
-    run_dir            = out_dir + "/mono_ram/"
+    run_dir            = out_dir + "/mnist/"
 
     #Save parameters
     save_period        = 100000
@@ -27,6 +28,7 @@ class TBDictParams(object):
     #Device to run on
     device             = "/gpu:1"
     #data params
+    image_shape        = dataObj.raw_image_shape #Can be None
     num_classes        = dataObj.num_classes
     num_features       = dataObj.num_features
 
@@ -34,15 +36,16 @@ class TBDictParams(object):
     num_steps = 40000 #T in paper
     dict_size = 300
     batch_size = 256
-    l1_weight = 0.075 #lambda_1 in paper
+    l1_weight = 0.1 #lambda_1 in paper
     l2_weight = 0    #lambda_2 in paper
-    weight_decay = 1e-3 #v in paper
+    weight_decay = 1e-5 #v in paper
+    init_weights = dataObj.getPCA(dict_size)
 
     #LCA params
     sc_lr = 3e-3
 
     decay_time = num_steps/10 #Time period which learning rate starts annealing
-    lr = 1e-3 #Learning rate
+    start_lr = 1.0 #Learning rate
 
 #Initialize params
 params = TBDictParams()
