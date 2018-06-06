@@ -111,13 +111,13 @@ class base(object):
                 print("Timestep ", self.timestep, ":", float(self.params.progress)/(tmp_time - progress_time), " iterations per second")
                 progress_time = tmp_time
             if(i%self.params.plot_period == 0):
-                self.plot(i, trainDataObj)
+                self.plot(i)
 
             self.trainStep(i, trainDataObj)
 
             self.timestep+=1
 
-    def plot(self, step, dataObj):
+    def plot(self, step):
         #Subclass should overwrite this
         pass
 
@@ -175,11 +175,11 @@ class base(object):
             #trainSummaries.append(tf.summary.image(key+"_grid_train", normImage(tensor, normalize)))
             #testSummaries.append(tf.summary.image(key+"_grid_test", normImage(test_tensor, test_normalize)))
             image = self.imageDict[key]
-            max_image = tf.reduce_max(image)
-            min_image = tf.reduce_min(image)
+            max_image = tf.reduce_max(image, axis=[1, 2, 3], keepdims=True)
+            min_image = tf.reduce_min(image, axis=[1, 2, 3], keepdims=True)
             norm_image = (image + min_image)/(max_image - min_image)
             bothSummaries.append(tf.summary.image(key, norm_image))
-            bothSummaries.append(tf.summary.histogram(key, norm_image))
+            bothSummaries.append(tf.summary.histogram(key, image))
 
         #Output tensorboard summaries
         for key in self.scalarDict.keys():
@@ -286,7 +286,7 @@ class base(object):
         self.evalModelSummary(images, labels, accuracy)
         return accuracy
 
-    def evalModelSummary(self, images, labels, injectAcc):
+    def evalModelSummary(self, input, labels, injectAcc):
         assert(False)
 
     #Loads a tf checkpoint

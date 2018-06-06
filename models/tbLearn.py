@@ -6,6 +6,7 @@ import pdb
 import numpy as np
 import time
 from models.lcaSC import lcaSC
+from plot.plotWeights import plot_weights
 
 class tbLearn(base):
     def buildModel(self):
@@ -87,7 +88,6 @@ class tbLearn(base):
 
                 accuracy = tf.cond(self.injectBool, lambda: self.injectAcc, lambda: calc_accuracy)
                 self.scalarDict["accuracy"] = accuracy
-                #TODO inject test accuracy here
 
             with tf.name_scope("loss"):
                 supervised_loss = tf.reduce_mean(tf.log(1 + tf.exp(-onehot_labels * feed_forward))) + (self.params.weight_decay/2) * tf.norm(self.W)
@@ -110,35 +110,44 @@ class tbLearn(base):
 
                 #Update W
                 #Note that the paper adds weight decay on W, but this is encompassed into the gradient wrt W
-                update_W = tf.assign_add(self.W,  -lr * sup_grad_wrt_W)
+                self.update_W = tf.assign_add(self.W,  -lr * sup_grad_wrt_W)
                 D_grad_term_1 = tf.matmul(sc_activation, tf.matmul(beta, -self.D, transpose_a=True), transpose_a=True)
                 D_grad_term_2 = tf.matmul(beta, (tile_input - self.scObj.recon))
-                update_D = tf.assign_add(self.D, -lr*(D_grad_term_1 + D_grad_term_2))
+                self.update_D = tf.assign_add(self.D, -lr*(D_grad_term_1 + D_grad_term_2))
 
                 #Normalize D
                 norm_D = tf.norm(self.D, axis=2, keepdims=True)
                 #Only normalize if norm > 1, i.e., l2 dict element always <= 1
                 norm_D = tf.maximum(tf.ones(D_shape), norm_D)
                 #Normalize after update
-                with tf.control_dependencies([update_D]):
+                with tf.control_dependencies([self.update_D]):
                     normalize_D= self.D.assign(self.D/norm_D)
 
                 #Group all update ops
                 #Always make sure the tf timestep is in sync with global timestep
                 with tf.control_dependencies([update_timestep]):
-                    self.update_step = tf.group(update_W, update_D)
+                    self.update_step = tf.group(self.update_W, self.update_D)
 
                 self.scalarDict["learning_rate"] = lr
 
+    def plot(self, step):
+        weights = self.sess.run(self.D)
+        reshape_weights = np.reshape(weights, (self.params.num_classes, self.params.dict_size,) + self.params.image_shape)
+        for c in range(self.params.num_classes):
+            c_weights = reshape_weights[c, ...]
+            filename = self.plot_dir + "/dict_" + str(step) + "_class_" + str(c)
+            plot_weights(c_weights, filename)
 
     def trainStep(self, step, trainDataObj):
         (input, labels) = trainDataObj.getData(self.params.batch_size)
-
         feed_dict = {self.input: input, self.labels: labels}
         #Compute sc
         self.scObj(self.sess, feed_dict)
-        #Update variables
-        self.sess.run(self.update_step, feed_dict=feed_dict)
+        #Train W without D first
+        if(step <= self.params.initial_train_W):
+            self.sess.run(self.update_W, feed_dict=feed_dict)
+        else:
+            self.sess.run(self.update_step, feed_dict=feed_dict)
         if(step%self.params.write_step == 0):
             self.writeTrainSummary(feed_dict)
 
@@ -150,14 +159,11 @@ class tbLearn(base):
         self.scObj(self.sess, feed_dict)
         #Calculate estimated labels
         est_labels = self.sess.run(self.est_labels, feed_dict=feed_dict)
-        correct_count = float(np.sum(est_labels == labels))/nbatch
+        correct_count = np.sum(est_labels == labels)
         return correct_count
 
     def evalModelSummary(self, input, labels, injectAcc):
         feed_dict = {self.input:input, self.labels:labels,
                 self.injectBool: True, self.injectAcc:injectAcc}
         self.writeTestSummary(feed_dict)
-
-        #self.writeTestSummary(feed_dict)
-        pass
 
