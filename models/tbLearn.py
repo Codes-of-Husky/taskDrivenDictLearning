@@ -58,10 +58,10 @@ class tbLearn(base):
                 sc_activation = self.scObj.activation
 
                 self.varDict["sc_activation"] = sc_activation
-                self.scalarDict["sc_recon_err"] = self.scObj.recon_error
-                self.scalarDict["sc_l1_sparsity"] = self.scObj.l1_sparsity
-                self.scalarDict["sc_loss"] = self.scObj.loss
-                self.scalarDict["sc_nnz"] = self.scObj.nnz
+                self.scalarDict["sc_recon_err"] = tf.reduce_mean(self.scObj.recon_error)
+                self.scalarDict["sc_l1_sparsity"] = tf.reduce_mean(self.scObj.l1_sparsity)
+                self.scalarDict["sc_loss"] = tf.reduce_mean(self.scObj.loss)
+                self.scalarDict["sc_nnz"] = tf.reduce_mean(self.scObj.nnz)
                 if(self.params.image_shape is not None):
                     reshape_recon = tf.reshape(self.scObj.recon, (self.params.num_classes, self.params.batch_size,) + self.params.image_shape)
                     for i in range(self.params.num_classes):
@@ -90,8 +90,8 @@ class tbLearn(base):
                 self.scalarDict["accuracy"] = accuracy
 
             with tf.name_scope("loss"):
-                supervised_loss = tf.reduce_mean(tf.log(1 + tf.exp(-onehot_labels * feed_forward))) + (self.params.weight_decay/2) * tf.norm(self.W)
-                self.scalarDict["supervised_loss"] = supervised_loss
+                supervised_loss = tf.reduce_sum(tf.log(1 + tf.exp(-onehot_labels * feed_forward)), axis=1) + (self.params.weight_decay/2) * tf.norm(self.W, axis=[1, 2])
+                self.scalarDict["supervised_loss"] = tf.reduce_mean(supervised_loss)
 
             with tf.name_scope("opt"):
                 D_covar = tf.matmul(self.D, self.D, transpose_b=True) + self.params.l2_weight*tf.eye(self.params.dict_size, batch_shape=[self.params.num_classes])
@@ -100,7 +100,7 @@ class tbLearn(base):
 
                 #D_covar^-1 * gradient
                 sup_grad_wrt_a = tf.transpose(sup_grad_wrt_a, [0, 2, 1])
-                beta = tf.matrix_solve_ls(D_covar, sup_grad_wrt_a)
+                beta = tf.matrix_solve(D_covar, sup_grad_wrt_a)
 
                 #compute learning rate
                 train_step = tf.Variable(0, name='train_step', dtype=tf.int64)

@@ -13,13 +13,13 @@ class TBDictParams(object):
     #Base output directory
     out_dir            = "/home/slundquist/mountData/tbLearn/"
     #Inner run directory
-    run_dir            = out_dir + "/mnist/"
+    run_dir            = out_dir + "/mnist_new_loss/"
 
     #Save parameters
     save_period        = 10000
     #output plots directory
     plot_period        = 5000
-    eval_period        = 1718 # 1 epoch
+    eval_period        = 1000 # 1 epoch
     #Progress step
     progress           = 100
     #Controls how often to write out to tensorboard
@@ -28,18 +28,19 @@ class TBDictParams(object):
     load               = False
     load_file          = ""
     #Device to run on
-    device             = "/gpu:1"
+    device             = "/gpu:0"
     #data params
     image_shape        = dataObj.raw_image_shape #Can be None
     num_classes        = dataObj.num_classes
     num_features       = dataObj.num_features
 
     #Model params
-    initial_train_W = 2000
+    #initial_train_W = 3000
+    initial_train_W = 0
     num_steps = 40000 + initial_train_W #T in paper
-    dict_size = 300
+    dict_size = 100
     batch_size = 256
-    l1_weight = 0.1 #lambda_1 in paper
+    l1_weight = 0.15 #lambda_1 in paper
     l2_weight = 0    #lambda_2 in paper
     weight_decay = 1e-5 #v in paper
     init_weights = dataObj.getDict(dict_size, alpha=l1_weight)

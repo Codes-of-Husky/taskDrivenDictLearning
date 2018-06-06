@@ -73,7 +73,7 @@ class mnistData(object):
     def getDict(self, num_init, alpha, num_sample=None):
         assert(num_init <= np.min(self.train_images.shape))
         if(num_sample is None):
-            num_sample = num_init * 5
+            num_sample = 5000
         data = self.getNormSample(num_sample)
         print("Running sklearn dict_learn for initial dictionary")
         dictionary = dict_learning(data, num_init, alpha, verbose=2, n_jobs=-1, max_iter=50)[1]
