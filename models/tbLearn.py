@@ -120,8 +120,8 @@ class tbLearn(base):
                 #Only normalize if norm > 1, i.e., l2 dict element always <= 1
                 norm_D = tf.maximum(tf.ones(D_shape), norm_D)
                 #Normalize after update
-                with tf.control_dependencies([self.update_D]):
-                    normalize_D= self.D.assign(self.D/norm_D)
+                #with tf.control_dependencies([self.update_D]):
+                self.normalize_D= self.D.assign(self.D/norm_D)
 
                 #Group all update ops
                 #Always make sure the tf timestep is in sync with global timestep
@@ -148,6 +148,7 @@ class tbLearn(base):
             self.sess.run(self.update_W, feed_dict=feed_dict)
         else:
             self.sess.run(self.update_step, feed_dict=feed_dict)
+            self.sess.run(self.normalize_D)
         if(step%self.params.write_step == 0):
             self.writeTrainSummary(feed_dict)
 
